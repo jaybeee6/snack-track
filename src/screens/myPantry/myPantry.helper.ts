@@ -30,8 +30,31 @@ export const useMyPantryScreenHelper = () => {
     product.name?.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const handleOnClickAddProduct = () => {
-    navigate("/addProduct");
+  const handleOnClickDeleteProduct = async (productId: string) => {
+    await supabase.from("products").delete().eq("id", productId);
+    setProducts((prev) => prev.filter((product) => product.id !== productId));
+  };
+
+  const handleOnClickAddOrDecreaseQuantity = async (
+    productId: string,
+    currentQuantity: number,
+    isAdding: boolean,
+  ) => {
+    const newQuantity = isAdding ? currentQuantity + 1 : currentQuantity - 1;
+    if (newQuantity === 0) return handleOnClickDeleteProduct(productId);
+
+    await supabase
+      .from("products")
+      .update({ quantity: newQuantity })
+      .eq("id", productId);
+
+    setProducts((prev) =>
+      prev.map((product) =>
+        product.id === productId
+          ? { ...product, quantity: newQuantity }
+          : product,
+      ),
+    );
   };
 
   return {
@@ -40,6 +63,7 @@ export const useMyPantryScreenHelper = () => {
     search,
     setSearch,
     filteredProducts,
-    handleOnClickAddProduct,
+    handleOnClickDeleteProduct,
+    handleOnClickAddOrDecreaseQuantity,
   };
 };

@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  ArrowBigLeft,
-  CalendarClock,
-  PackagePlus,
-  Tags,
-  Weight,
-} from "lucide-react";
+import { CalendarClock, PackagePlus, Tags, Weight } from "lucide-react";
 import { BottomNavigation } from "../../components";
 import { useAddProductScreenHelper } from "./addProduct.helper";
 
@@ -13,14 +7,7 @@ export const AddProductScreen: React.FC = () => {
   const { handleOnClickAddProduct, handleOnClickBack } =
     useAddProductScreenHelper();
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-lime-50 px-4 py-18 pb-32 sm:px-6 lg:px-10">
-      <button
-        type="button"
-        onClick={handleOnClickBack}
-        className="fixed border gap-1 border-orange-100 top-6 left-5 z-50 inline-flex items-center rounded-full bg-white px-3 py-3 text-sm font-semibold text-slate-900 shadow-2xl "
-      >
-        <ArrowBigLeft className="h-4 w-4 text-slate-900 " /> Back
-      </button>
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-lime-50 px-4 py-6 pb-32 sm:px-6 lg:px-10">
       <div className="mx-auto max-w-6xl">
         <header className="mb-8 rounded-3xl border border-orange-100 bg-white/80 p-6 shadow-xl backdrop-blur sm:p-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

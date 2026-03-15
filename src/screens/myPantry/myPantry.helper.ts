@@ -13,7 +13,7 @@ export const useMyPantryScreenHelper = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       const { data, error } = await supabase
-        .from("products")
+        .from("pantry_items")
         .select("*")
         .eq("user_id", user?.id);
       if (error) {
@@ -31,7 +31,7 @@ export const useMyPantryScreenHelper = () => {
   );
 
   const handleOnClickDeleteProduct = async (productId: string) => {
-    await supabase.from("products").delete().eq("id", productId);
+    await supabase.from("pantry_items").delete().eq("id", productId);
     setProducts((prev) => prev.filter((product) => product.id !== productId));
   };
 
@@ -44,7 +44,7 @@ export const useMyPantryScreenHelper = () => {
     if (newQuantity === 0) return handleOnClickDeleteProduct(productId);
 
     await supabase
-      .from("products")
+      .from("pantry_items")
       .update({ quantity: newQuantity })
       .eq("id", productId);
 

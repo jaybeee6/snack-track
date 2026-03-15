@@ -1,4 +1,4 @@
-import { Search, Package, Plus } from "lucide-react";
+import { Search, Package, Plus, Minus, Trash2 } from "lucide-react";
 import { BottomNavigation } from "../../components";
 import { useMyPantryScreenHelper } from "./myPantry.helper";
 
@@ -8,7 +8,8 @@ export const MyPantryScreen: React.FC = () => {
     search,
     setSearch,
     filteredProducts,
-    handleOnClickAddProduct,
+    handleOnClickDeleteProduct,
+    handleOnClickAddOrDecreaseQuantity,
   } = useMyPantryScreenHelper();
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-emerald-50 via-cyan-50 to-slate-100 px-4 py-6 pb-32 sm:px-6 lg:px-10">
@@ -89,21 +90,63 @@ export const MyPantryScreen: React.FC = () => {
                 </span>
               </div>
 
-              <div className="space-y-2 text-sm text-slate-600">
-                <p>
-                  <span className="font-semibold text-slate-800">
-                    Quantity:
-                  </span>{" "}
-                  {product.quantity || "N/A"}
-                </p>
-                {product.expiration_date && (
-                  <p>
-                    <span className="font-semibold text-slate-800">
-                      Expires:
-                    </span>{" "}
-                    {new Date(product.expiration_date).toLocaleDateString()}
-                  </p>
-                )}
+              <div className="space-y-3 text-sm text-slate-600">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-slate-800">Quantity</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        handleOnClickAddOrDecreaseQuantity(
+                          product.id,
+                          product.quantity,
+                          false,
+                        );
+                      }}
+                      type="button"
+                      aria-label="Decrease quantity"
+                      className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-600 transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600"
+                    >
+                      <Minus className="h-3.5 w-3.5" />
+                    </button>
+                    <span className="w-8 text-center text-base font-bold text-slate-900">
+                      {product.quantity ?? 0}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label="Increase quantity"
+                      className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-600 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-600"
+                      onClick={() => {
+                        handleOnClickAddOrDecreaseQuantity(
+                          product.id,
+                          product.quantity,
+                          true,
+                        );
+                      }}
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+                <div className="flex space-between items-center justify-between">
+                  {product.expiration_date && (
+                    <p>
+                      <span className="font-semibold text-slate-800">
+                        Expires:
+                      </span>{" "}
+                      {new Date(product.expiration_date).toLocaleDateString()}
+                    </p>
+                  )}
+                  <button
+                    onClick={() => {
+                      handleOnClickDeleteProduct(product.id);
+                    }}
+                    type="button"
+                    aria-label="Remove product"
+                    className="flex h-8 w-8 items-center justify-center rounded-full border border-red-600 bg-red-50 text-red-600 transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
             </article>
           ))}
@@ -120,14 +163,6 @@ export const MyPantryScreen: React.FC = () => {
             </p>
           </div>
         )}
-
-        <button
-          type="button"
-          onClick={handleOnClickAddProduct}
-          className="fixed bottom-24 right-6 z-50 inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-2xl transition hover:-translate-y-0.5 hover:bg-slate-800"
-        >
-          <Plus className="h-4 w-4" /> Add Product
-        </button>
       </div>
 
       <BottomNavigation />

@@ -11,16 +11,59 @@ import { BarcodeScanner, BottomNavigation } from "../../components";
 import { useAddProductScreenHelper } from "./addProduct.helper";
 
 export const AddProductScreen: React.FC = () => {
+  const [productName, setProductName] = useState("");
+  const [quantity, setQuantity] = useState("");
+  const [category, setCategory] = useState("");
+  const [expirationDate, setExpirationDate] = useState("");
   const [barcode, setBarcode] = useState("");
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isProcessingScan, setIsProcessingScan] = useState(false);
+  const [scanMessage, setScanMessage] = useState<string | null>(null);
+  const [scanMessageType, setScanMessageType] = useState<"success" | "error">(
+    "success",
+  );
 
-  const { handleOnClickAddProduct, handleOnClickBack } =
+  const baseCategoryOptions = ["Grains", "Snacks", "Canned Goods", "Frozen"];
+  const categoryOptions =
+    baseCategoryOptions.includes(category) || !category
+      ? baseCategoryOptions
+      : [category, ...baseCategoryOptions];
+
+  const { handleOnClickAddProduct, handleOnClickBack, handleOnScanBarcode } =
     useAddProductScreenHelper();
 
-  const handleBarcodeDetected = useCallback((code: string) => {
-    setBarcode(code);
-    setIsScannerOpen(false);
-  }, []);
+  const handleBarcodeDetected = useCallback(
+    async (code: string) => {
+      if (isProcessingScan) {
+        return;
+      }
+
+      setBarcode(code);
+      setIsScannerOpen(false);
+      setScanMessage(null);
+      setScanMessageType("success");
+      setIsProcessingScan(true);
+
+      const result = await handleOnScanBarcode(code);
+
+      if (!result.success || !result.product) {
+        setScanMessageType("error");
+        setScanMessage(result.message ?? "Could not fetch product details.");
+        setIsProcessingScan(false);
+        return;
+      }
+
+      setBarcode(result.product.barcode);
+      setProductName(result.product.name);
+      setCategory(result.product.category);
+      setQuantity(String(result.product.quantity));
+      setScanMessageType("success");
+      setScanMessage("Product details loaded. Review and tap Save Product.");
+
+      setIsProcessingScan(false);
+    },
+    [handleOnScanBarcode, isProcessingScan],
+  );
 
   useEffect(() => {
     if (!isScannerOpen) {
@@ -78,6 +121,8 @@ export const AddProductScreen: React.FC = () => {
                 <input
                   type="text"
                   name="productName"
+                  value={productName}
+                  onChange={(event) => setProductName(event.target.value)}
                   placeholder="Ex: Bananas"
                   className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
                 />
@@ -91,6 +136,8 @@ export const AddProductScreen: React.FC = () => {
                 <input
                   type="number"
                   name="quantity"
+                  value={quantity}
+                  onChange={(event) => setQuantity(event.target.value)}
                   placeholder="0"
                   className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
                 />
@@ -103,13 +150,16 @@ export const AddProductScreen: React.FC = () => {
                 </span>
                 <select
                   name="category"
+                  value={category}
+                  onChange={(event) => setCategory(event.target.value)}
                   className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
                 >
-                  <option>Choose a category</option>
-                  <option>Grains</option>
-                  <option>Snacks</option>
-                  <option>Canned Goods</option>
-                  <option>Frozen</option>
+                  <option value="">Choose a category</option>
+                  {categoryOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
                 </select>
               </label>
 
@@ -121,6 +171,8 @@ export const AddProductScreen: React.FC = () => {
                 <input
                   type="date"
                   name="expirationDate"
+                  value={expirationDate}
+                  onChange={(event) => setExpirationDate(event.target.value)}
                   className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-rose-500 focus:ring-2 focus:ring-rose-200"
                 />
               </label>
@@ -141,15 +193,27 @@ export const AddProductScreen: React.FC = () => {
                   />
                   <button
                     type="button"
+                    disabled={isProcessingScan}
                     onClick={() => setIsScannerOpen(true)}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100 sm:min-w-40"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-60 sm:min-w-40"
                   >
                     <>
                       <ScanLine className="h-4 w-4" />
-                      Scan Barcode
+                      {isProcessingScan ? "Loading Product..." : "Scan Barcode"}
                     </>
                   </button>
                 </div>
+                {scanMessage && (
+                  <p
+                    className={`mt-2 text-sm font-medium ${
+                      scanMessageType === "success"
+                        ? "text-emerald-700"
+                        : "text-rose-600"
+                    }`}
+                  >
+                    {scanMessage}
+                  </p>
+                )}
               </label>
             </div>
 
@@ -183,8 +247,9 @@ export const AddProductScreen: React.FC = () => {
             <button
               type="button"
               aria-label="Close scanner"
+              disabled={isProcessingScan}
               onClick={() => setIsScannerOpen(false)}
-              className="pointer-events-auto inline-flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur transition hover:bg-black/80"
+              className="pointer-events-auto inline-flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur transition hover:bg-black/80 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <X className="h-5 w-5" />
             </button>

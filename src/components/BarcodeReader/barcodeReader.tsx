@@ -45,7 +45,12 @@ export function BarcodeScanner({ onDetected }: BarcodeScannerProps) {
     };
   }, [onDetected]);
 
-  return <div id="scanner" style={{ width: "100%" }} />;
+  return (
+    <div
+      id="scanner"
+      className="h-full w-full overflow-hidden [&>canvas]:h-full [&>canvas]:w-full [&>video]:h-full [&>video]:w-full [&>video]:object-cover"
+    />
+  );
 }
 
 export default BarcodeScanner;

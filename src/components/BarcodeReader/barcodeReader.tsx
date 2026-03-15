@@ -1,56 +1,49 @@
-import { useEffect } from "react";
-import Quagga from "@ericblade/quagga2";
+import { useEffect, useRef } from "react";
+import { BrowserMultiFormatReader } from "@zxing/browser";
+import type { IScannerControls } from "@zxing/browser";
+import { NotFoundException } from "@zxing/library";
 
 interface BarcodeScannerProps {
   onDetected: (code: string) => void;
 }
 
 export function BarcodeScanner({ onDetected }: BarcodeScannerProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const controlsRef = useRef<IScannerControls | null>(null);
+
   useEffect(() => {
-    const handleDetected = (data: unknown) => {
-      const result = data as { codeResult?: { code?: string | null } };
-      const code = result?.codeResult?.code;
-      if (code) {
-        onDetected(code);
-      }
-    };
+    if (!videoRef.current) {
+      return;
+    }
 
-    Quagga.init(
-      {
-        inputStream: {
-          type: "LiveStream",
-          target: document.querySelector("#scanner") as HTMLElement,
-          constraints: {
-            facingMode: "environment",
-          },
-        },
-        decoder: {
-          readers: ["ean_reader", "ean_8_reader", "code_128_reader"],
-        },
-      },
-      (err) => {
-        if (err) {
-          console.error(err);
-          return;
-        }
-        Quagga.start();
-      },
-    );
+    const codeReader = new BrowserMultiFormatReader();
 
-    Quagga.onDetected(handleDetected);
+    codeReader
+      .decodeFromConstraints(
+        { video: { facingMode: "environment" } },
+        videoRef.current,
+        (result, error) => {
+          if (result) {
+            onDetected(result.getText());
+          }
+          if (error && !(error instanceof NotFoundException)) {
+            console.error("Scanner error:", error);
+          }
+        },
+      )
+      .then((controls) => {
+        controlsRef.current = controls;
+      })
+      .catch((err: unknown) => {
+        console.error("Scanner init error:", err);
+      });
 
     return () => {
-      Quagga.offDetected(handleDetected);
-      Quagga.stop();
+      controlsRef.current?.stop();
     };
   }, [onDetected]);
 
-  return (
-    <div
-      id="scanner"
-      className="h-full w-full overflow-hidden [&>canvas]:h-full [&>canvas]:w-full [&>video]:h-full [&>video]:w-full [&>video]:object-cover"
-    />
-  );
+  return <video ref={videoRef} className="h-full w-full object-cover" />;
 }
 
 export default BarcodeScanner;

@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   CalendarClock,
   PackagePlus,
@@ -21,6 +21,19 @@ export const AddProductScreen: React.FC = () => {
     setBarcode(code);
     setIsScannerOpen(false);
   }, []);
+
+  useEffect(() => {
+    if (!isScannerOpen) {
+      return;
+    }
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isScannerOpen]);
 
   return (
     <div className="min-h-screen bg-linear-to-br from-amber-50 via-orange-50 to-lime-50 px-4 py-6 pb-32 sm:px-6 lg:px-10">
@@ -128,35 +141,17 @@ export const AddProductScreen: React.FC = () => {
                   />
                   <button
                     type="button"
-                    onClick={() => setIsScannerOpen((prev) => !prev)}
+                    onClick={() => setIsScannerOpen(true)}
                     className="inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100 sm:min-w-40"
                   >
-                    {isScannerOpen ? (
-                      <>
-                        <X className="h-4 w-4" />
-                        Close Scanner
-                      </>
-                    ) : (
-                      <>
-                        <ScanLine className="h-4 w-4" />
-                        Scan Barcode
-                      </>
-                    )}
+                    <>
+                      <ScanLine className="h-4 w-4" />
+                      Scan Barcode
+                    </>
                   </button>
                 </div>
               </label>
             </div>
-
-            {isScannerOpen && (
-              <div className="mt-6 rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4">
-                <p className="mb-3 text-sm font-semibold text-indigo-700">
-                  Point your camera at the product barcode
-                </p>
-                <div className="overflow-hidden rounded-xl border border-indigo-200 bg-black/5 p-2">
-                  <BarcodeScanner onDetected={handleBarcodeDetected} />
-                </div>
-              </div>
-            )}
 
             <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <button
@@ -176,6 +171,32 @@ export const AddProductScreen: React.FC = () => {
           </form>
         </section>
       </div>
+
+      {isScannerOpen && (
+        <div className="fixed inset-0 z-70 bg-black">
+          <BarcodeScanner onDetected={handleBarcodeDetected} />
+
+          <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between p-4 sm:p-6">
+            <p className="rounded-full bg-black/50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-white">
+              Scan Barcode
+            </p>
+            <button
+              type="button"
+              aria-label="Close scanner"
+              onClick={() => setIsScannerOpen(false)}
+              className="pointer-events-auto inline-flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur transition hover:bg-black/80"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          <div className="pointer-events-none absolute inset-x-0 bottom-6 flex justify-center px-4">
+            <div className="rounded-full bg-black/55 px-4 py-2 text-center text-sm font-medium text-white backdrop-blur">
+              Align the barcode inside the camera view
+            </div>
+          </div>
+        </div>
+      )}
 
       <BottomNavigation />
     </div>

@@ -20,7 +20,13 @@ export function BarcodeScanner({ onDetected }: BarcodeScannerProps) {
 
     codeReader
       .decodeFromConstraints(
-        { video: { facingMode: "environment" } },
+        {
+          video: {
+            facingMode: "environment",
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+        },
         videoRef.current,
         (result, error) => {
           if (result) {

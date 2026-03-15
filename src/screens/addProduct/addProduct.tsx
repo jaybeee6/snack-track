@@ -1,13 +1,29 @@
-import React from "react";
-import { CalendarClock, PackagePlus, Tags, Weight } from "lucide-react";
-import { BottomNavigation } from "../../components";
+import React, { useCallback, useState } from "react";
+import {
+  CalendarClock,
+  PackagePlus,
+  ScanLine,
+  Tags,
+  Weight,
+  X,
+} from "lucide-react";
+import { BarcodeScanner, BottomNavigation } from "../../components";
 import { useAddProductScreenHelper } from "./addProduct.helper";
 
 export const AddProductScreen: React.FC = () => {
+  const [barcode, setBarcode] = useState("");
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+
   const { handleOnClickAddProduct, handleOnClickBack } =
     useAddProductScreenHelper();
+
+  const handleBarcodeDetected = useCallback((code: string) => {
+    setBarcode(code);
+    setIsScannerOpen(false);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-lime-50 px-4 py-6 pb-32 sm:px-6 lg:px-10">
+    <div className="min-h-screen bg-linear-to-br from-amber-50 via-orange-50 to-lime-50 px-4 py-6 pb-32 sm:px-6 lg:px-10">
       <div className="mx-auto max-w-6xl">
         <header className="mb-8 rounded-3xl border border-orange-100 bg-white/80 p-6 shadow-xl backdrop-blur sm:p-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -95,7 +111,52 @@ export const AddProductScreen: React.FC = () => {
                   className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-rose-500 focus:ring-2 focus:ring-rose-200"
                 />
               </label>
+
+              <label className="sm:col-span-2">
+                <span className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                  <ScanLine className="h-4 w-4 text-indigo-500" />
+                  Barcode
+                </span>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <input
+                    type="text"
+                    name="barcode"
+                    value={barcode}
+                    onChange={(event) => setBarcode(event.target.value)}
+                    placeholder="Scan or type barcode"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setIsScannerOpen((prev) => !prev)}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100 sm:min-w-40"
+                  >
+                    {isScannerOpen ? (
+                      <>
+                        <X className="h-4 w-4" />
+                        Close Scanner
+                      </>
+                    ) : (
+                      <>
+                        <ScanLine className="h-4 w-4" />
+                        Scan Barcode
+                      </>
+                    )}
+                  </button>
+                </div>
+              </label>
             </div>
+
+            {isScannerOpen && (
+              <div className="mt-6 rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4">
+                <p className="mb-3 text-sm font-semibold text-indigo-700">
+                  Point your camera at the product barcode
+                </p>
+                <div className="overflow-hidden rounded-xl border border-indigo-200 bg-black/5 p-2">
+                  <BarcodeScanner onDetected={handleBarcodeDetected} />
+                </div>
+              </div>
+            )}
 
             <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <button

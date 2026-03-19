@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../services";
 import { useAuthStore } from "../../store";
@@ -34,6 +35,8 @@ interface ProductRecord {
 export const useAddProductScreenHelper = () => {
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
+  const [isSavingProduct, setIsSavingProduct] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const fetchOpenFoodFactsData = async (barcode: string) => {
     let name = `Scanned product ${barcode}`;
@@ -190,7 +193,16 @@ export const useAddProductScreenHelper = () => {
     event: React.SubmitEvent<HTMLFormElement>,
   ) => {
     event.preventDefault();
+    if (isSavingProduct) {
+      return;
+    }
+
+    setIsSavingProduct(true);
+    setSaveError(null);
+
     if (!user?.id) {
+      setSaveError("You need to be signed in to add products.");
+      setIsSavingProduct(false);
       return;
     }
 
@@ -204,40 +216,50 @@ export const useAddProductScreenHelper = () => {
 
     const parsedQuantity = Math.max(1, Number(quantity) || 1);
 
-    let existingProduct = await findProductByBarcode(barcode);
-    if (!existingProduct) {
-      existingProduct = await findProductByName(name);
-    }
-
-    let product = existingProduct;
-
-    if (!product) {
-      let resolvedName = name || "Unknown Product";
-      let resolvedCategory = category || "Uncategorized";
-
-      if (barcode) {
-        const offData = await fetchOpenFoodFactsData(barcode);
-        resolvedName = name || offData.name;
-        resolvedCategory = category || offData.category || resolvedCategory;
+    try {
+      let existingProduct = await findProductByBarcode(barcode);
+      if (!existingProduct) {
+        existingProduct = await findProductByName(name);
       }
 
-      product = await createProduct({
-        name: resolvedName,
-        category: resolvedCategory,
-        barcode,
+      let product = existingProduct;
+
+      if (!product) {
+        let resolvedName = name || "Unknown Product";
+        let resolvedCategory = category || "Uncategorized";
+
+        if (barcode) {
+          const offData = await fetchOpenFoodFactsData(barcode);
+          resolvedName = name || offData.name;
+          resolvedCategory = category || offData.category || resolvedCategory;
+        }
+
+        product = await createProduct({
+          name: resolvedName,
+          category: resolvedCategory,
+          barcode,
+        });
+      }
+
+      await addProductToUserPantry({
+        userId: user.id,
+        productId: product.id,
+        quantity: parsedQuantity,
+        expirationDate,
+        fallbackName: product.name,
+        fallbackCategory: product.category || "Uncategorized",
       });
+
+      navigate("/myPantry");
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Could not save product. Please try again.";
+      setSaveError(message);
+    } finally {
+      setIsSavingProduct(false);
     }
-
-    await addProductToUserPantry({
-      userId: user.id,
-      productId: product.id,
-      quantity: parsedQuantity,
-      expirationDate,
-      fallbackName: product.name,
-      fallbackCategory: product.category || "Uncategorized",
-    });
-
-    navigate("/myPantry");
   };
 
   const handleOnClickBack = () => {
@@ -273,5 +295,11 @@ export const useAddProductScreenHelper = () => {
     };
   };
 
-  return { handleOnClickAddProduct, handleOnClickBack, handleOnScanBarcode };
+  return {
+    handleOnClickAddProduct,
+    handleOnClickBack,
+    handleOnScanBarcode,
+    isSavingProduct,
+    saveError,
+  };
 };

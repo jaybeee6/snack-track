@@ -4,13 +4,13 @@
 import { supabase } from "./supabase";
 
 export const authSignUp = (password: string, email: string, options?: any) => {
-  supabase.auth.signUp({ password, email, options });
+  return supabase.auth.signUp({ password, email, options });
 };
 
 export const authSignIn = (password: string, email: string) => {
-  supabase.auth.signInWithPassword({ password, email }).then(() => {});
+  return supabase.auth.signInWithPassword({ password, email });
 };
 
 export const authSignOut = () => {
-  supabase.auth.signOut();
+  return supabase.auth.signOut();
 };

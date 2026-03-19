@@ -8,6 +8,7 @@ export const AuthScreen: React.FC = () => {
     handleOnSubmitSignIn,
     handleOnSubmitSignUp,
     isSignUp,
+    isSubmitting,
     handleOnClickSignUp,
   } = useAuthScreenHelper();
 
@@ -20,7 +21,7 @@ export const AuthScreen: React.FC = () => {
 
       <div className="relative mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-5xl items-center justify-center">
         <div className="grid w-full gap-6 rounded-3xl border border-white/60 bg-white/85 p-4 shadow-xl backdrop-blur sm:p-6 lg:grid-cols-2 lg:gap-8 lg:p-8">
-          <section className="rounded-2xl bg-gradient-to-br from-emerald-600 to-cyan-600 p-6 text-white sm:p-8">
+          <section className="rounded-2xl bg-linear-to-br from-emerald-600 to-cyan-600 p-6 text-white sm:p-8">
             <p className="text-sm uppercase tracking-[0.2em] text-emerald-100">
               Snack Track
             </p>
@@ -87,10 +88,17 @@ export const AuthScreen: React.FC = () => {
               </label>
 
               <button
-                className="mt-2 w-full rounded-2xl bg-emerald-600 px-4 py-3 text-lg font-semibold text-white transition hover:bg-emerald-500"
+                className="mt-2 w-full rounded-2xl bg-emerald-600 px-4 py-3 text-lg font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-70"
                 type="submit"
+                disabled={isSubmitting}
               >
-                {isSignUp ? "Sign Up" : "Log In"}
+                {isSubmitting
+                  ? isSignUp
+                    ? "Creating account..."
+                    : "Signing in..."
+                  : isSignUp
+                    ? "Sign Up"
+                    : "Log In"}
               </button>
 
               {!isSignUp && (
@@ -111,8 +119,9 @@ export const AuthScreen: React.FC = () => {
               </p>
               <button
                 type="button"
-                className="mt-2 text-lg font-semibold text-emerald-700 transition hover:text-emerald-600"
+                className="mt-2 text-lg font-semibold text-emerald-700 transition hover:text-emerald-600 disabled:cursor-not-allowed disabled:opacity-70"
                 onClick={handleOnClickSignUp}
+                disabled={isSubmitting}
               >
                 {!isSignUp ? "Sign Up" : "Log In"}
               </button>

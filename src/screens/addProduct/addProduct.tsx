@@ -29,8 +29,13 @@ export const AddProductScreen: React.FC = () => {
       ? baseCategoryOptions
       : [category, ...baseCategoryOptions];
 
-  const { handleOnClickAddProduct, handleOnClickBack, handleOnScanBarcode } =
-    useAddProductScreenHelper();
+  const {
+    handleOnClickAddProduct,
+    handleOnClickBack,
+    handleOnScanBarcode,
+    isSavingProduct,
+    saveError,
+  } = useAddProductScreenHelper();
 
   const handleBarcodeDetected = useCallback(
     async (code: string) => {
@@ -124,6 +129,7 @@ export const AddProductScreen: React.FC = () => {
                   value={productName}
                   onChange={(event) => setProductName(event.target.value)}
                   placeholder="Ex: Bananas"
+                  disabled={isSavingProduct}
                   className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
                 />
               </label>
@@ -139,6 +145,7 @@ export const AddProductScreen: React.FC = () => {
                   value={quantity}
                   onChange={(event) => setQuantity(event.target.value)}
                   placeholder="0"
+                  disabled={isSavingProduct}
                   className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
                 />
               </label>
@@ -152,6 +159,7 @@ export const AddProductScreen: React.FC = () => {
                   name="category"
                   value={category}
                   onChange={(event) => setCategory(event.target.value)}
+                  disabled={isSavingProduct}
                   className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
                 >
                   <option value="">Choose a category</option>
@@ -173,6 +181,7 @@ export const AddProductScreen: React.FC = () => {
                   name="expirationDate"
                   value={expirationDate}
                   onChange={(event) => setExpirationDate(event.target.value)}
+                  disabled={isSavingProduct}
                   className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-rose-500 focus:ring-2 focus:ring-rose-200"
                 />
               </label>
@@ -189,11 +198,12 @@ export const AddProductScreen: React.FC = () => {
                     value={barcode}
                     onChange={(event) => setBarcode(event.target.value)}
                     placeholder="Scan or type barcode"
+                    disabled={isSavingProduct}
                     className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                   />
                   <button
                     type="button"
-                    disabled={isProcessingScan}
+                    disabled={isProcessingScan || isSavingProduct}
                     onClick={() => setIsScannerOpen(true)}
                     className="inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-60 sm:min-w-40"
                   >
@@ -214,6 +224,11 @@ export const AddProductScreen: React.FC = () => {
                     {scanMessage}
                   </p>
                 )}
+                {saveError && (
+                  <p className="mt-2 text-sm font-medium text-rose-600">
+                    {saveError}
+                  </p>
+                )}
               </label>
             </div>
 
@@ -222,14 +237,16 @@ export const AddProductScreen: React.FC = () => {
                 type="button"
                 className="rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
                 onClick={handleOnClickBack}
+                disabled={isSavingProduct}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+                disabled={isSavingProduct}
+                className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
               >
-                Save Product
+                {isSavingProduct ? "Saving..." : "Save Product"}
               </button>
             </div>
           </form>
@@ -247,7 +264,7 @@ export const AddProductScreen: React.FC = () => {
             <button
               type="button"
               aria-label="Close scanner"
-              disabled={isProcessingScan}
+              disabled={isProcessingScan || isSavingProduct}
               onClick={() => setIsScannerOpen(false)}
               className="pointer-events-auto inline-flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur transition hover:bg-black/80 disabled:cursor-not-allowed disabled:opacity-60"
             >
